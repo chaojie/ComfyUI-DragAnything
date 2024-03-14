@@ -18,22 +18,22 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from diffusers.configuration_utils import ConfigMixin, register_to_config
-from diffusers.loaders import FromOriginalControlnetMixin
-from diffusers.utils import BaseOutput, logging
-from diffusers.models.attention_processor import (
+from ..diffusers.configuration_utils import ConfigMixin, register_to_config
+from ..diffusers.loaders import FromOriginalControlnetMixin
+from ..diffusers.utils import BaseOutput, logging
+from ..diffusers.models.attention_processor import (
     ADDED_KV_ATTENTION_PROCESSORS,
     CROSS_ATTENTION_PROCESSORS,
     AttentionProcessor,
     AttnAddedKVProcessor,
     AttnProcessor,
 )
-from diffusers.models.embeddings import TextImageProjection, TextImageTimeEmbedding, TextTimeEmbedding, TimestepEmbedding, Timesteps
-from diffusers.models.modeling_utils import ModelMixin
-from diffusers.models.unet_3d_blocks  import (
+from ..diffusers.models.embeddings import TextImageProjection, TextImageTimeEmbedding, TextTimeEmbedding, TimestepEmbedding, Timesteps
+from ..diffusers.models.modeling_utils import ModelMixin
+from ..diffusers.models.unet_3d_blocks  import (
     get_down_block, get_up_block,UNetMidBlockSpatioTemporal,
 )
-from diffusers.models import UNetSpatioTemporalConditionModel
+from ..diffusers.models import UNetSpatioTemporalConditionModel
 
 # import torch
 # import torch.nn.functional as F

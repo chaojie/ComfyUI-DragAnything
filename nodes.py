@@ -2,15 +2,15 @@ import os
 import sys
 import folder_paths
 comfy_path = os.path.dirname(folder_paths.__file__)
-sys.path.append(f'{comfy_path}/custom_nodes/ComfyUI-DragAnything')
+#sys.path.append(f'{comfy_path}/custom_nodes/ComfyUI-DragAnything')
 
 import torch
 import datetime
 import numpy as np
 from PIL import Image
-from pipeline.pipeline_svd_DragAnything import StableVideoDiffusionPipeline
-from models.DragAnything import DragAnythingSDVModel
-from models.unet_spatio_temporal_condition_controlnet import UNetSpatioTemporalConditionControlNetModel
+from .pipeline.pipeline_svd_DragAnything import StableVideoDiffusionPipeline
+from .models.DragAnything import DragAnythingSDVModel
+from .models.unet_spatio_temporal_condition_controlnet import UNetSpatioTemporalConditionControlNetModel
 import cv2
 import re 
 from scipy.ndimage import distance_transform_edt
