@@ -20,6 +20,17 @@ git-lfs clone https://huggingface.co/stabilityai/stable-video-diffusion-img2vid
 
 https://github.com/chaojie/ComfyUI-DragAnything/blob/main/workflow.json
 
+## With ComfyUI-Trajectory
+
+```
+cd custom_nodes
+git clone https://github.com/chaojie/ComfyUI-Trajectory.git
+```
+
+<img src="wf_traj.png" raw=true>
+
+https://github.com/chaojie/ComfyUI-DragAnything/blob/main/workflow_traj.json
+
 ## DragAnything
 
 [DragAnything](https://github.com/showlab/DragAnything)
