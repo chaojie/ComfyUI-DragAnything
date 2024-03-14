@@ -1,5 +1,9 @@
 ComfyUI DragAnything
 
+## Notice
+
+mask_list length needs to be greater than or equal to trajectory_list length
+
 ## Install
 
 ```
