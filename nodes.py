@@ -16,7 +16,7 @@ import re
 from scipy.ndimage import distance_transform_edt
 import torchvision.transforms as T
 import torch.nn.functional as F
-from utils.dift_util import DIFT_Demo, SDFeaturizer
+from .utils.dift_util import DIFT_Demo, SDFeaturizer
 from torchvision.transforms import PILToTensor
 import json
 
