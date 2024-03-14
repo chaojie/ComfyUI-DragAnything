@@ -288,6 +288,7 @@ def extract_dift_feature(image, dift_model):
            
     prompt = ''
     img_tensor = (PILToTensor()(image) / 255.0 - 0.5) * 2
+    #print(f'{img_tensor}')
     dift_feature = dift_model.forward(img_tensor, prompt=prompt, up_ft_index=3,ensemble_size=8)
     return dift_feature
 
@@ -303,6 +304,7 @@ def get_condition(target_size=(512 , 512), original_size=(512 , 512), frame_numb
     
     
     dift_model = SDFeaturizer(sd_id=model_id)
+    #print(f'{first_frame}')
     keyframe_dift = extract_dift_feature(first_frame, dift_model=dift_model)
     
     ID_images=[]
@@ -311,7 +313,7 @@ def get_condition(target_size=(512 , 512), original_size=(512 , 512), frame_numb
     #with open(os.path.join(args["validation_image"],"demo.json"), 'r') as json_file:
     #    trajectory_json = json.load(json_file)
     trajectories=json.loads(trajectory_list)
-    mask_list = []
+    #mask_list = []
     trajectory_list = []
     radius_list = []
     
@@ -323,7 +325,7 @@ def get_condition(target_size=(512 , 512), original_size=(512 , 512), frame_numb
         #mask
         first_mask = mask_list[ind]
         
-        mask_322 = cv2.resize(first_mask.astype(np.uint8),(int(target_size[1]), int(target_size[0])))
+        mask_322 = cv2.resize(np.array(first_mask).astype(np.uint8),(int(target_size[1]), int(target_size[0])))
         _, radius = find_largest_inner_rectangle_coordinates(mask_322)
         radius_list.append(radius)   
         ind=ind+1 
@@ -348,7 +350,7 @@ def get_condition(target_size=(512 , 512), original_size=(512 , 512), frame_numb
             
         for cc,(mask,trajectory,radius) in enumerate(zip(mask_list,trajectory_list,radius_list)):
             
-            
+            #print(f'cc{cc}ids_list{ids_list}')
             center_coordinate = trajectory[idxx]
             trajectory_ = trajectory[:idxx]
             side = min(radius,50)
@@ -361,6 +363,7 @@ def get_condition(target_size=(512 , 512), original_size=(512 , 512), frame_numb
             if idxx == 0:
                 # diffusion feature
                 mask_32 = cv2.resize(mask.astype(np.uint8),latent_size)
+                #print(f'mask_32{mask_32}')
                 if len(np.column_stack(np.where(mask_32 != 0)))==0:
                     continue
                 ids_list[cc] = get_dift_ID(keyframe_dift[0],mask_32)
@@ -469,37 +472,14 @@ pretrained_weights_path=f'{comfy_path}/custom_nodes/ComfyUI-DragAnything/pretrai
 output_dir=f'{comfy_path}/custom_nodes/ComfyUI-DragAnything/saved_video'
 pretrained_weights=os.listdir(pretrained_weights_path)
 
-class DragAnythingLoader:
+class DragAnythingRun:
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
                 "svd_path": (pretrained_weights, {"default": "stable-video-diffusion-img2vid"}),
                 "draganything_path": (pretrained_weights, {"default": "DragAnything"}),
-            },
-        }
-
-    RETURN_TYPES = ("DragAnythingPipe",)
-    RETURN_NAMES = ("pipe",)
-    FUNCTION = "run"
-    CATEGORY = "DragAnything"
-
-    def run(self,svd_path,draganything_path):
-        svd_path=f'{pretrained_weights_path}/{svd_path}'
-        draganything_path=f'{pretrained_weights_path}/{draganything_path}'
-        controlnet = controlnet = DragAnythingSDVModel.from_pretrained(draganything_path)
-        unet = UNetSpatioTemporalConditionControlNetModel.from_pretrained(svd_path,subfolder="unet")
-        pipeline = StableVideoDiffusionPipeline.from_pretrained(svd_path,controlnet=controlnet,unet=unet)
-        pipeline.enable_model_cpu_offload()
-
-        return (pipeline,)
-
-class DragAnythingCondition:
-    @classmethod
-    def INPUT_TYPES(cls):
-        return {
-            "required": {
-                "sd_path": (pretrained_weights, {"default": "DragAnything"}),
+                "sd_path": (pretrained_weights, {"default": "chilloutmix"}),
                 "image": ("IMAGE",),
                 "width": ("INT",{"default":576}),
                 "height": ("INT",{"default":320}),
@@ -509,19 +489,33 @@ class DragAnythingCondition:
             },
         }
 
-    RETURN_TYPES = ("validation_control_images,ids_embedding,vis_images",)
-    RETURN_NAMES = ("model",)
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "run"
     CATEGORY = "DragAnything"
 
-    def run(self,sd_path,image,width,height,frame_number,mask_list,trajectory_list):
+    def run(self,svd_path,draganything_path,sd_path,image,width,height,frame_number,mask_list,trajectory_list):
+        svd_path=f'{pretrained_weights_path}/{svd_path}'
+        draganything_path=f'{pretrained_weights_path}/{draganything_path}'
+        controlnet = controlnet = DragAnythingSDVModel.from_pretrained(draganything_path)
+        unet = UNetSpatioTemporalConditionControlNetModel.from_pretrained(svd_path,subfolder="unet")
+        pipeline = StableVideoDiffusionPipeline.from_pretrained(svd_path,controlnet=controlnet,unet=unet)
+        pipeline.enable_model_cpu_offload()
+
         sd_path=f'{pretrained_weights_path}/{sd_path}'
         image = 255.0 * image[0].cpu().numpy()
-        image = Image.fromarray(np.clip(image, 0, 255).astype(np.uint8))
+        image = Image.fromarray(np.clip(image, 0, 255).astype(np.uint8)).convert('RGB')
+        #image = np.array(image)
+        # Convert RGB to BGR
+        #image = image[:, :, ::-1].copy()
         masks=[]
         for mask in mask_list:
-            mask_img=255.0 * mask[0].cpu().numpy()
-            mask_img = Image.fromarray(np.clip(mask_img, 0, 255).astype(np.uint8))
+            mask_img=255.0 * mask.cpu().numpy()
+            mask_img = Image.fromarray(np.clip(mask_img, 0, 255).astype(np.uint8)).convert('RGB')
+            mask_img = np.array(mask_img)
+            # Convert RGB to BGR
+            #mask_img = mask_img[:, :, ::-1].copy()
+            mask_img = cv2.cvtColor(np.array(mask_img).astype(np.uint8), cv2.COLOR_RGB2GRAY)
             masks.append(mask_img)
             
         validation_image = image
@@ -533,32 +527,9 @@ class DragAnythingCondition:
                                                                         side=100,model_id=sd_path,mask_list=masks,trajectory_list=trajectory_list)
         ids_embedding = torch.stack(ids_embedding, dim=0).permute(0, 3, 1, 2)
 
-        return (validation_control_images,ids_embedding,vis_images,)
-
-class DragAnythingRun:
-    @classmethod
-    def INPUT_TYPES(cls):
-        return {
-            "required": {
-                "pipe": ("DragAnythingPipe",),
-                "width": ("INT",{"default":576}),
-                "height": ("INT",{"default":320}),
-                "validation_control_images": ("IMAGE",),
-                "ids_embedding": ("IMAGE",),
-                "vis_images": ("IMAGE",),
-                "frame_number": ("INT",{"default":20}),
-            },
-        }
-
-    RETURN_TYPES = ("IMAGE",)
-    RETURN_NAMES = ("image",)
-    FUNCTION = "run"
-    CATEGORY = "DragAnything"
-
-    def run(self,pipe,width,height,validation_control_images,ids_embedding,vis_images):
         val_save_dir = output_dir
         os.makedirs(val_save_dir, exist_ok=True)
-
+        
         # Inference and saving loop
         video_frames = pipeline(validation_image, validation_control_images[:frame_number], decode_chunk_size=8,num_frames=frame_number,motion_bucket_id=180,controlnet_cond_scale=1.0,height=height,width=width,ids_embedding=ids_embedding[:frame_number]).frames
 
@@ -570,12 +541,10 @@ class DragAnythingRun:
         video_frames = [img for sublist in video_frames for img in sublist]
 
         #save_gifs_side_by_side(video_frames, vis_images[:args["frame_number"]],val_save_dir,target_size=(width,height),duration=110)
-
-        return (video_frames,)
+        data = [torch.unsqueeze(torch.tensor(np.array(image).astype(np.float32) / 255.0), 0) for image in video_frames]
+        return torch.cat(tuple(data), dim=0).unsqueeze(0)
 
 NODE_CLASS_MAPPINGS = {
-    "DragAnythingLoader":DragAnythingLoader,
-    "DragAnythingCondition":DragAnythingCondition,
     "DragAnythingRun":DragAnythingRun,
 }
 

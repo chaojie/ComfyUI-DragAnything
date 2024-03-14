@@ -296,6 +296,8 @@ def maybe_raise_or_warn(
 ):
     """Simple helper method to raise or warn in case incorrect module has been passed"""
     if not is_pipeline_module:
+        if library_name=='diffusers':
+            library_name="custom_nodes.ComfyUI-DragAnything.diffusers"
         library = importlib.import_module(library_name)
         class_obj = getattr(library, class_name)
         class_candidates = {c: getattr(library, c, None) for c in importable_classes.keys()}
@@ -311,10 +313,10 @@ def maybe_raise_or_warn(
         unwrapped_sub_model = _unwrap_model(sub_model)
         model_cls = unwrapped_sub_model.__class__
 
-        if not issubclass(model_cls, expected_class_obj):
-            raise ValueError(
-                f"{passed_class_obj[name]} is of type: {model_cls}, but should be" f" {expected_class_obj}"
-            )
+        #if not issubclass(model_cls, expected_class_obj):
+        #    raise ValueError(
+        #        f"{passed_class_obj[name]} is of type: {model_cls}, but should be" f" {expected_class_obj}"
+        #    )
     else:
         logger.warning(
             f"You have passed a non-standard module {passed_class_obj[name]}. We cannot verify whether it"
@@ -327,6 +329,7 @@ def get_class_obj_and_candidates(
 ):
     """Simple helper method to retrieve class object of module as well as potential parent class objects"""
     component_folder = os.path.join(cache_dir, component_name)
+    print(f'component_folder{component_folder},library_name{library_name},')
 
     if is_pipeline_module:
         pipeline_module = getattr(pipelines, library_name)
@@ -341,6 +344,8 @@ def get_class_obj_and_candidates(
         class_candidates = {c: class_obj for c in importable_classes.keys()}
     else:
         # else we just import it from the library.
+        if library_name=='diffusers':
+            library_name="custom_nodes.ComfyUI-DragAnything.diffusers"
         library = importlib.import_module(library_name)
 
         class_obj = getattr(library, class_name)
@@ -468,7 +473,7 @@ def load_sub_model(
     load_method = getattr(class_obj, load_method_name)
 
     # add kwargs to loading method
-    diffusers_module = importlib.import_module(__name__.split(".")[0])
+    diffusers_module = importlib.import_module("custom_nodes.ComfyUI-DragAnything.diffusers")
     loading_kwargs = {}
     if issubclass(class_obj, torch.nn.Module):
         loading_kwargs["torch_dtype"] = torch_dtype
@@ -522,6 +527,7 @@ def load_sub_model(
 
     # check if the module is in a subdirectory
     if os.path.isdir(os.path.join(cached_folder, name)):
+        print(os.path.join(cached_folder, name))
         loaded_sub_model = load_method(os.path.join(cached_folder, name), **loading_kwargs)
     else:
         # else load from the root directory
@@ -557,7 +563,7 @@ class DiffusionPipeline(ConfigMixin, PushToHubMixin):
 
     def register_modules(self, **kwargs):
         # import it here to avoid circular import
-        diffusers_module = importlib.import_module(__name__.split(".")[0])
+        diffusers_module = importlib.import_module("custom_nodes.ComfyUI-DragAnything.diffusers")
         pipelines = getattr(diffusers_module, "pipelines")
 
         for name, module in kwargs.items():
@@ -1045,7 +1051,7 @@ class DiffusionPipeline(ConfigMixin, PushToHubMixin):
         Examples:
 
         ```py
-        >>> from diffusers import DiffusionPipeline
+        >>> from custom_nodes.ComfyUI-DragAnything.diffusers import DiffusionPipeline
 
         >>> # Download pipeline from huggingface.co and cache.
         >>> pipeline = DiffusionPipeline.from_pretrained("CompVis/ldm-text2im-large-256")
@@ -1056,7 +1062,7 @@ class DiffusionPipeline(ConfigMixin, PushToHubMixin):
         >>> pipeline = DiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5")
 
         >>> # Use a different scheduler
-        >>> from diffusers import LMSDiscreteScheduler
+        >>> from custom_nodes.ComfyUI-DragAnything.diffusers import LMSDiscreteScheduler
 
         >>> scheduler = LMSDiscreteScheduler.from_config(pipeline.scheduler.config)
         >>> pipeline.scheduler = scheduler
@@ -1158,6 +1164,7 @@ class DiffusionPipeline(ConfigMixin, PushToHubMixin):
         if pipeline_class.__name__ == "StableDiffusionInpaintPipeline" and version.parse(
             version.parse(config_dict["_diffusers_version"]).base_version
         ) <= version.parse("0.5.1"):
+            diffusers = __import__('custom_nodes.ComfyUI-DragAnything.diffusers')
             from diffusers import StableDiffusionInpaintPipeline, StableDiffusionInpaintPipelineLegacy
 
             pipeline_class = StableDiffusionInpaintPipelineLegacy
@@ -1245,6 +1252,7 @@ class DiffusionPipeline(ConfigMixin, PushToHubMixin):
             )
 
         # import it here to avoid circular import
+        diffusers = __import__('custom_nodes.ComfyUI-DragAnything.diffusers')
         from diffusers import pipelines
 
         # 6. Load each module in the pipeline
@@ -1261,6 +1269,7 @@ class DiffusionPipeline(ConfigMixin, PushToHubMixin):
             if name in passed_class_obj:
                 # if the model is in a pipeline module, then we load it from the pipeline
                 # check that passed_class_obj has correct parent class
+                print(f'library_name:{library_name},name:{name},passed_class_obj:{passed_class_obj}')
                 maybe_raise_or_warn(
                     library_name, library, class_name, importable_classes, passed_class_obj, name, is_pipeline_module
                 )
@@ -1680,7 +1689,7 @@ class DiffusionPipeline(ConfigMixin, PushToHubMixin):
             filenames = {sibling.rfilename for sibling in info.siblings}
             model_filenames, variant_filenames = variant_compatible_siblings(filenames, variant=variant)
 
-            diffusers_module = importlib.import_module(__name__.split(".")[0])
+            diffusers_module = importlib.import_module("custom_nodes.ComfyUI-DragAnything.diffusers")
             pipelines = getattr(diffusers_module, "pipelines")
 
             # optionally create a custom component <> custom file mapping
@@ -1871,7 +1880,7 @@ class DiffusionPipeline(ConfigMixin, PushToHubMixin):
             cls_name = cls.load_config(os.path.join(cached_folder, "model_index.json")).get("_class_name", None)
             cls_name = cls_name[4:] if isinstance(cls_name, str) and cls_name.startswith("Flax") else cls_name
 
-            diffusers_module = importlib.import_module(__name__.split(".")[0])
+            diffusers_module = importlib.import_module()
             pipeline_class = getattr(diffusers_module, cls_name, None) if isinstance(cls_name, str) else None
 
             if pipeline_class is not None and pipeline_class._load_connected_pipes:
@@ -1935,7 +1944,7 @@ class DiffusionPipeline(ConfigMixin, PushToHubMixin):
         Examples:
 
         ```py
-        >>> from diffusers import (
+        >>> from custom_nodes.ComfyUI-DragAnything.diffusers import (
         ...     StableDiffusionPipeline,
         ...     StableDiffusionImg2ImgPipeline,
         ...     StableDiffusionInpaintPipeline,
@@ -2007,7 +2016,7 @@ class DiffusionPipeline(ConfigMixin, PushToHubMixin):
 
         ```py
         >>> import torch
-        >>> from diffusers import DiffusionPipeline
+        >>> from custom_nodes.ComfyUI-DragAnything.diffusers import DiffusionPipeline
         >>> from xformers.ops import MemoryEfficientAttentionFlashAttentionOp
 
         >>> pipe = DiffusionPipeline.from_pretrained("stabilityai/stable-diffusion-2-1", torch_dtype=torch.float16)
@@ -2070,7 +2079,7 @@ class DiffusionPipeline(ConfigMixin, PushToHubMixin):
 
         ```py
         >>> import torch
-        >>> from diffusers import StableDiffusionPipeline
+        >>> from custom_nodes.ComfyUI-DragAnything.diffusers import StableDiffusionPipeline
 
         >>> pipe = StableDiffusionPipeline.from_pretrained(
         ...     "runwayml/stable-diffusion-v1-5",
