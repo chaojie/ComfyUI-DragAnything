@@ -329,7 +329,7 @@ def get_class_obj_and_candidates(
 ):
     """Simple helper method to retrieve class object of module as well as potential parent class objects"""
     component_folder = os.path.join(cache_dir, component_name)
-    print(f'component_folder{component_folder},library_name{library_name},')
+    #print(f'component_folder{component_folder},library_name{library_name},')
 
     if is_pipeline_module:
         pipeline_module = getattr(pipelines, library_name)
@@ -1269,7 +1269,7 @@ class DiffusionPipeline(ConfigMixin, PushToHubMixin):
             if name in passed_class_obj:
                 # if the model is in a pipeline module, then we load it from the pipeline
                 # check that passed_class_obj has correct parent class
-                print(f'library_name:{library_name},name:{name},passed_class_obj:{passed_class_obj}')
+                #print(f'library_name:{library_name},name:{name},passed_class_obj:{passed_class_obj}')
                 maybe_raise_or_warn(
                     library_name, library, class_name, importable_classes, passed_class_obj, name, is_pipeline_module
                 )

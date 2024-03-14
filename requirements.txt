@@ -5,7 +5,7 @@ cmake>=3.28.1
 contourpy>=1.1.1
 cycler>=0.12.1
 decord>=0.6.0
-diffusers>=0.19.3
+diffusers==0.19.3
 docopt>=0.6.2
 einops>=0.7.0
 ffmpeg>=1.4
