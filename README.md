@@ -4,6 +4,8 @@ ComfyUI DragAnything
 
 mask_list length needs to be greater than or equal to trajectory_list length
 
+trajectory_list length needs to be greater than or equal to frame_number
+
 ## Install
 
 ```
