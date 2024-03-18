@@ -27,6 +27,7 @@ from ...schedulers import EulerDiscreteScheduler
 from ...utils import BaseOutput, logging
 from ...utils.torch_utils import is_compiled_module, randn_tensor
 from ..pipeline_utils import DiffusionPipeline
+import comfy.utils
 
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
@@ -489,6 +490,7 @@ class StableVideoDiffusionPipeline(DiffusionPipeline):
         # 8. Denoising loop
         num_warmup_steps = len(timesteps) - num_inference_steps * self.scheduler.order
         self._num_timesteps = len(timesteps)
+        pbar = comfy.utils.ProgressBar(num_inference_steps)
         with self.progress_bar(total=num_inference_steps) as progress_bar:
             for i, t in enumerate(timesteps):
                 # expand the latents if we are doing classifier free guidance
@@ -525,6 +527,7 @@ class StableVideoDiffusionPipeline(DiffusionPipeline):
 
                 if i == len(timesteps) - 1 or ((i + 1) > num_warmup_steps and (i + 1) % self.scheduler.order == 0):
                     progress_bar.update()
+                    pbar.update(1)
 
         if not output_type == "latent":
             # cast back to fp16 if needed

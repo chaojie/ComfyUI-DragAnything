@@ -487,6 +487,10 @@ class DragAnythingRun:
                 "frame_number": ("INT",{"default":20}),
                 "mask_list": ("IMAGE",),
                 "trajectory_list": ("STRING", {"default": "[[]]"}),
+                "num_inference_steps": ("INT",{"default":25}),
+                "motion_bucket_id": ("INT",{"default":180}),
+                "controlnet_cond_scale": ("FLOAT",{"default":1.0}),
+                "decode_chunk_size": ("INT",{"default":8}),
             },
         }
 
@@ -495,7 +499,7 @@ class DragAnythingRun:
     FUNCTION = "run"
     CATEGORY = "DragAnything"
 
-    def run(self,svd_path,draganything_path,sd_path,image,width,height,frame_number,mask_list,trajectory_list):
+    def run(self,svd_path,draganything_path,sd_path,image,width,height,frame_number,mask_list,trajectory_list,num_inference_steps,motion_bucket_id,controlnet_cond_scale,decode_chunk_size):
         svd_path=f'{pretrained_weights_path}/{svd_path}'
         draganything_path=f'{pretrained_weights_path}/{draganything_path}'
         controlnet = controlnet = DragAnythingSDVModel.from_pretrained(draganything_path)
@@ -532,7 +536,7 @@ class DragAnythingRun:
         os.makedirs(val_save_dir, exist_ok=True)
         
         # Inference and saving loop
-        video_frames = pipeline(validation_image, validation_control_images[:frame_number], decode_chunk_size=8,num_frames=frame_number,motion_bucket_id=180,controlnet_cond_scale=1.0,height=height,width=width,ids_embedding=ids_embedding[:frame_number]).frames
+        video_frames = pipeline(validation_image, validation_control_images[:frame_number], decode_chunk_size=decode_chunk_size,num_frames=frame_number,num_inference_steps=num_inference_steps,motion_bucket_id=motion_bucket_id,controlnet_cond_scale=controlnet_cond_scale,height=height,width=width,ids_embedding=ids_embedding[:frame_number]).frames
 
         vis_images = [cv2.applyColorMap(np.array(img).astype(np.uint8), cv2.COLORMAP_JET) for img in vis_images]
         vis_images = [cv2.cvtColor(np.array(img).astype(np.uint8), cv2.COLOR_BGR2RGB) for img in vis_images]
@@ -558,6 +562,10 @@ class DragAnythingRunRandom:
                 "height": ("INT",{"default":320}),
                 "frame_number": ("INT",{"default":20}),
                 "mask_list": ("IMAGE",),
+                "num_inference_steps": ("INT",{"default":25}),
+                "motion_bucket_id": ("INT",{"default":180}),
+                "controlnet_cond_scale": ("FLOAT",{"default":1.0}),
+                "decode_chunk_size": ("INT",{"default":8}),
             },
         }
 
@@ -566,7 +574,7 @@ class DragAnythingRunRandom:
     FUNCTION = "run"
     CATEGORY = "DragAnything"
 
-    def run(self,svd_path,draganything_path,sd_path,image,width,height,frame_number,mask_list):
+    def run(self,svd_path,draganything_path,sd_path,image,width,height,frame_number,mask_list,num_inference_steps,motion_bucket_id,controlnet_cond_scale,decode_chunk_size):
         trajectory_list="[]"
         trajectories=json.loads(trajectory_list)
         
@@ -600,8 +608,8 @@ class DragAnythingRunRandom:
             mask_trajectory.append([x,y])
             
             for frame_ind in range(frame_number-1):
-                x=x+np.randint(-10,10)
-                y=y+np.randint(-10,10)
+                x=x+random.randint(-10,10)
+                y=y+random.randint(-10,10)
                 if x<0:
                     x=0
                 if y<0:
@@ -613,6 +621,7 @@ class DragAnythingRunRandom:
                 mask_trajectory.append([x,y])
             trajectories.append(mask_trajectory)
         trajectory_list=json.dumps(trajectories)
+        print(f'trajectory_list{trajectory_list}')
 
         validation_image = image
         original_width, original_height = validation_image.size
@@ -627,7 +636,7 @@ class DragAnythingRunRandom:
         os.makedirs(val_save_dir, exist_ok=True)
         
         # Inference and saving loop
-        video_frames = pipeline(validation_image, validation_control_images[:frame_number], decode_chunk_size=8,num_frames=frame_number,motion_bucket_id=180,controlnet_cond_scale=1.0,height=height,width=width,ids_embedding=ids_embedding[:frame_number]).frames
+        video_frames = pipeline(validation_image, validation_control_images[:frame_number], decode_chunk_size=decode_chunk_size,num_frames=frame_number,num_inference_steps=num_inference_steps,motion_bucket_id=motion_bucket_id,controlnet_cond_scale=controlnet_cond_scale,height=height,width=width,ids_embedding=ids_embedding[:frame_number]).frames
 
         vis_images = [cv2.applyColorMap(np.array(img).astype(np.uint8), cv2.COLORMAP_JET) for img in vis_images]
         vis_images = [cv2.cvtColor(np.array(img).astype(np.uint8), cv2.COLOR_BGR2RGB) for img in vis_images]
@@ -640,8 +649,128 @@ class DragAnythingRunRandom:
         data = [torch.unsqueeze(torch.tensor(np.array(image).astype(np.float32) / 255.0), 0) for image in video_frames]
         return torch.cat(tuple(data), dim=0).unsqueeze(0)
 
+class VHS_FILENAMES_STRING:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+                "required": {
+                    "filenames": ("VHS_FILENAMES",),
+                    }
+                }
+
+    RETURN_TYPES = ("STRING",)
+    CATEGORY = "DragAnything"
+    FUNCTION = "run"
+
+    def run(self, filenames):
+        return (filenames[1][-1],)
+
+def get_allowed_dirs():
+    dir = os.path.abspath(os.path.join(__file__, ".."))
+    file = os.path.join(dir, "text_file_dirs.json")
+    with open(file, "r") as f:
+        return json.loads(f.read())
+
+
+def get_valid_dirs():
+    return get_allowed_dirs().keys()
+
+def get_dir_from_name(name):
+    dirs = get_allowed_dirs()
+    if name not in dirs:
+        raise KeyError(name + " dir not found")
+
+    path = dirs[name]
+    path = path.replace("$input", folder_paths.get_input_directory())
+    path = path.replace("$output", folder_paths.get_output_directory())
+    path = path.replace("$temp", folder_paths.get_temp_directory())
+    return path
+
+
+def is_child_dir(parent_path, child_path):
+    parent_path = os.path.abspath(parent_path)
+    child_path = os.path.abspath(child_path)
+    return os.path.commonpath([parent_path]) == os.path.commonpath([parent_path, child_path])
+
+
+def get_real_path(dir):
+    dir = dir.replace("/**/", "/")
+    dir = os.path.abspath(dir)
+    dir = os.path.split(dir)[0]
+    return dir
+
+def get_file(root_dir, file):
+    if file == "[none]" or not file or not file.strip():
+        raise ValueError("No file")
+
+    root_dir = get_dir_from_name(root_dir)
+    root_dir = get_real_path(root_dir)
+    if not os.path.exists(root_dir):
+        os.mkdir(root_dir)
+    full_path = os.path.join(root_dir, file)
+
+    #if not is_child_dir(root_dir, full_path):
+    #    raise ReferenceError()
+
+    return full_path
+
+class TextFileNode:
+    RETURN_TYPES = ("STRING","BOOLEAN",)
+    CATEGORY = "utils"
+
+    def load_text(self, **kwargs):
+        self.file = get_file(kwargs["root_dir"], kwargs["file"])
+        if not os.path.exists(self.file):
+            return ("",False,)
+        with open(self.file, "r") as f:
+            return (f.read(),True, )
+
+
+class LoadText(TextFileNode):
+    @classmethod
+    def IS_CHANGED(self, **kwargs):
+        return os.path.getmtime(self.file)
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "root_dir": (list(get_valid_dirs()), {"default":"output"}),
+                "file": ("STRING", {"default": "dragtest_1.txt"}),
+            },
+        }
+
+    FUNCTION = "load_text"
+
+class SaveText(TextFileNode):
+    @classmethod
+    def IS_CHANGED(self, **kwargs):
+        return float("nan")
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "root_dir": (list(get_valid_dirs()), {"default":"output"}),
+                "file": ("STRING", {"default": "dragtest_1.txt"}),
+                "text": ("STRING", {"forceInput": True, "multiline": True})
+            },
+        }
+
+    FUNCTION = "write_text"
+
+    def write_text(self, **kwargs):
+        self.file = get_file(kwargs["root_dir"], kwargs["file"])
+        with open(self.file, "w") as f:
+            f.write(kwargs["text"])
+
+        return super().load_text(**kwargs)
+
 NODE_CLASS_MAPPINGS = {
     "DragAnythingRun":DragAnythingRun,
     "DragAnythingRunRandom":DragAnythingRunRandom,
+    "VHS_FILENAMES_STRING":VHS_FILENAMES_STRING,
+    "LoadText":LoadText,
+    "SaveText":SaveText,
 }
 
