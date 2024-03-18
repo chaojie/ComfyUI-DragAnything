@@ -6,6 +6,8 @@ mask_list length needs to be greater than or equal to trajectory_list length
 
 trajectory_list length needs to be greater than or equal to frame_number
 
+height and width must be multiples of 64
+
 ## Install
 
 ```
