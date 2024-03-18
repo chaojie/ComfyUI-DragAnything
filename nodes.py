@@ -19,6 +19,7 @@ import torch.nn.functional as F
 from .utils.dift_util import DIFT_Demo, SDFeaturizer
 from torchvision.transforms import PILToTensor
 import json
+import random
 
 def save_gifs_side_by_side(batch_output, validation_control_images,output_folder,name = 'none', target_size=(512 , 512),duration=200):
 
@@ -544,7 +545,103 @@ class DragAnythingRun:
         data = [torch.unsqueeze(torch.tensor(np.array(image).astype(np.float32) / 255.0), 0) for image in video_frames]
         return torch.cat(tuple(data), dim=0).unsqueeze(0)
 
+class DragAnythingRunRandom:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "svd_path": (pretrained_weights, {"default": "stable-video-diffusion-img2vid"}),
+                "draganything_path": (pretrained_weights, {"default": "DragAnything"}),
+                "sd_path": (pretrained_weights, {"default": "chilloutmix"}),
+                "image": ("IMAGE",),
+                "width": ("INT",{"default":576}),
+                "height": ("INT",{"default":320}),
+                "frame_number": ("INT",{"default":20}),
+                "mask_list": ("IMAGE",),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
+    FUNCTION = "run"
+    CATEGORY = "DragAnything"
+
+    def run(self,svd_path,draganything_path,sd_path,image,width,height,frame_number,mask_list):
+        trajectory_list="[]"
+        trajectories=json.loads(trajectory_list)
+        
+        svd_path=f'{pretrained_weights_path}/{svd_path}'
+        draganything_path=f'{pretrained_weights_path}/{draganything_path}'
+        controlnet = controlnet = DragAnythingSDVModel.from_pretrained(draganything_path)
+        unet = UNetSpatioTemporalConditionControlNetModel.from_pretrained(svd_path,subfolder="unet")
+        pipeline = StableVideoDiffusionPipeline.from_pretrained(svd_path,controlnet=controlnet,unet=unet)
+        pipeline.enable_model_cpu_offload()
+
+        sd_path=f'{pretrained_weights_path}/{sd_path}'
+        image = 255.0 * image[0].cpu().numpy()
+        image = Image.fromarray(np.clip(image, 0, 255).astype(np.uint8)).convert('RGB')
+        #image = np.array(image)
+        # Convert RGB to BGR
+        #image = image[:, :, ::-1].copy()
+        masks=[]
+        for mask in mask_list:
+            mask_img=255.0 * mask.cpu().numpy()
+            mask_img = Image.fromarray(np.clip(mask_img, 0, 255).astype(np.uint8)).convert('RGB')
+            mask_img = np.array(mask_img)
+            # Convert RGB to BGR
+            #mask_img = mask_img[:, :, ::-1].copy()
+            mask_img = cv2.cvtColor(np.array(mask_img).astype(np.uint8), cv2.COLOR_RGB2GRAY)
+            masks.append(mask_img)
+
+            mask_trajectory=[]
+            points=np.where(mask_img==1)
+            x=np.mean(points[1])
+            y=np.mean(points[0])
+            mask_trajectory.append([x,y])
+            
+            for frame_ind in range(frame_number-1):
+                x=x+np.randint(-10,10)
+                y=y+np.randint(-10,10)
+                if x<0:
+                    x=0
+                if y<0:
+                    y=0
+                if x>=image.size[0]:
+                    x=image.size[0]-1
+                if y>=image.size[1]:
+                    y=image.size[1]-1
+                mask_trajectory.append([x,y])
+            trajectories.append(mask_trajectory)
+        trajectory_list=json.dumps(trajectories)
+
+        validation_image = image
+        original_width, original_height = validation_image.size
+        validation_image = validation_image.resize((width, height))
+        validation_control_images,ids_embedding,vis_images = get_condition(target_size=(height , width),
+                                                                        original_size=(original_height , original_width),
+                                                                        frame_number = frame_number,first_frame = validation_image,
+                                                                        side=100,model_id=sd_path,mask_list=masks,trajectory_list=trajectory_list)
+        ids_embedding = torch.stack(ids_embedding, dim=0).permute(0, 3, 1, 2)
+
+        val_save_dir = output_dir
+        os.makedirs(val_save_dir, exist_ok=True)
+        
+        # Inference and saving loop
+        video_frames = pipeline(validation_image, validation_control_images[:frame_number], decode_chunk_size=8,num_frames=frame_number,motion_bucket_id=180,controlnet_cond_scale=1.0,height=height,width=width,ids_embedding=ids_embedding[:frame_number]).frames
+
+        vis_images = [cv2.applyColorMap(np.array(img).astype(np.uint8), cv2.COLORMAP_JET) for img in vis_images]
+        vis_images = [cv2.cvtColor(np.array(img).astype(np.uint8), cv2.COLOR_BGR2RGB) for img in vis_images]
+        
+        vis_images = [Image.fromarray(img) for img in vis_images]
+        
+        video_frames = [img for sublist in video_frames for img in sublist]
+
+        #save_gifs_side_by_side(video_frames, vis_images[:args["frame_number"]],val_save_dir,target_size=(width,height),duration=110)
+        data = [torch.unsqueeze(torch.tensor(np.array(image).astype(np.float32) / 255.0), 0) for image in video_frames]
+        return torch.cat(tuple(data), dim=0).unsqueeze(0)
+
 NODE_CLASS_MAPPINGS = {
     "DragAnythingRun":DragAnythingRun,
+    "DragAnythingRunRandom":DragAnythingRunRandom,
 }
 
