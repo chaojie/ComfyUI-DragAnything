@@ -51,6 +51,12 @@ https://github.com/chaojie/ComfyUI-DragAnything/blob/main/workflow_traj.json
 
 https://github.com/chaojie/ComfyUI-DragAnything/blob/main/wf_cyclist.json
 
+## Cyclist workflow+Ipadapter 无限长度视频生成+Ipadapter
+
+<img src="wf_cyclist_ipadapter.png" raw=true>
+
+https://github.com/chaojie/ComfyUI-DragAnything/blob/main/wf_cyclist_ipadapter
+
 ## DragAnything
 
 [DragAnything](https://github.com/showlab/DragAnything)
