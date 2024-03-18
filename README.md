@@ -55,7 +55,7 @@ https://github.com/chaojie/ComfyUI-DragAnything/blob/main/wf_cyclist.json
 
 <img src="wf_cyclist_ipadapter.png" raw=true>
 
-https://github.com/chaojie/ComfyUI-DragAnything/blob/main/wf_cyclist_ipadapter
+https://github.com/chaojie/ComfyUI-DragAnything/blob/main/wf_cyclist_ipadapter.json
 
 ## DragAnything
 
