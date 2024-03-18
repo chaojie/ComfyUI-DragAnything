@@ -37,6 +37,20 @@ git clone https://github.com/chaojie/ComfyUI-Trajectory.git
 
 https://github.com/chaojie/ComfyUI-DragAnything/blob/main/workflow_traj.json
 
+## Cyclist workflow 无限长度视频生成
+
+修改Max Time节点int_1为你想运行的时间，比如30，指30分钟
+
+修改LayerMask: SegmentAnythingUltra V2节点prompt，指的是你想Drag的物体
+
+打开ComfyUI Extra options
+
+<img src="cyclist.png" raw=true>
+
+<img src="wf_cyclist.png" raw=true>
+
+https://github.com/chaojie/ComfyUI-DragAnything/blob/main/wf_cyclist.json
+
 ## DragAnything
 
 [DragAnything](https://github.com/showlab/DragAnything)
