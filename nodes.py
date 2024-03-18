@@ -566,6 +566,8 @@ class DragAnythingRunRandom:
                 "motion_bucket_id": ("INT",{"default":180}),
                 "controlnet_cond_scale": ("FLOAT",{"default":1.0}),
                 "decode_chunk_size": ("INT",{"default":8}),
+                "move_speed": ("INT",{"default":5}),
+                "move_border": ("INT",{"default":20}),
             },
         }
 
@@ -574,7 +576,7 @@ class DragAnythingRunRandom:
     FUNCTION = "run"
     CATEGORY = "DragAnything"
 
-    def run(self,svd_path,draganything_path,sd_path,image,width,height,frame_number,mask_list,num_inference_steps,motion_bucket_id,controlnet_cond_scale,decode_chunk_size):
+    def run(self,svd_path,draganything_path,sd_path,image,width,height,frame_number,mask_list,num_inference_steps,motion_bucket_id,controlnet_cond_scale,decode_chunk_size,move_speed,move_border):
         trajectory_list="[]"
         trajectories=json.loads(trajectory_list)
         
@@ -608,16 +610,16 @@ class DragAnythingRunRandom:
             mask_trajectory.append([x,y])
             
             for frame_ind in range(frame_number-1):
-                x=x+random.randint(-10,10)
-                y=y+random.randint(-10,10)
-                if x<0:
-                    x=0
-                if y<0:
-                    y=0
-                if x>=image.size[0]:
-                    x=image.size[0]-1
-                if y>=image.size[1]:
-                    y=image.size[1]-1
+                x=x+random.randint(-move_speed,move_speed)
+                y=y+random.randint(-move_speed,move_speed)
+                if x<move_border:
+                    x=move_border
+                if y<move_border:
+                    y=move_border
+                if x>=image.size[0]-move_border:
+                    x=image.size[0]-move_border
+                if y>=image.size[1]-move_border:
+                    y=image.size[1]-move_border
                 mask_trajectory.append([x,y])
             trajectories.append(mask_trajectory)
         trajectory_list=json.dumps(trajectories)
