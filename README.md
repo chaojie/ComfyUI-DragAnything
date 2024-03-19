@@ -59,6 +59,10 @@ https://github.com/chaojie/ComfyUI-DragAnything/blob/main/wf_cyclist.json
 
 https://github.com/chaojie/ComfyUI-DragAnything/blob/main/wf_cyclist_ipadapter.json
 
+## Cyclist final workflow
+
+https://github.com/chaojie/ComfyUI-DragAnything/blob/main/wf_cyclist_final.json
+
 ## DragAnything
 
 [DragAnything](https://github.com/showlab/DragAnything)
