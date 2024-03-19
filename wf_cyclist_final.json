@@ -1756,7 +1756,7 @@
         "1": 58
       },
       "flags": {},
-      "order": 94,
+      "order": 93,
       "mode": 0,
       "inputs": [
         {
@@ -1993,42 +1993,6 @@
       },
       "widgets_values": [
         "Model"
-      ]
-    },
-    {
-      "id": 84,
-      "type": "SetNode",
-      "pos": [
-        -674.6905578613281,
-        -30.83037140586157
-      ],
-      "size": {
-        "0": 210,
-        "1": 58
-      },
-      "flags": {},
-      "order": 70,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "VAE",
-          "type": "VAE",
-          "link": 96
-        }
-      ],
-      "outputs": [
-        {
-          "name": "*",
-          "type": "*",
-          "links": null
-        }
-      ],
-      "title": "Set_VAE",
-      "properties": {
-        "previousName": "VAE"
-      },
-      "widgets_values": [
-        "VAE"
       ]
     },
     {
@@ -3243,7 +3207,7 @@
       },
       "widgets_values": [
         "",
-        "/home/admin/ComfyUI/output/AnimateDiff_00313.mp4"
+        "/home/admin/ComfyUI/output/AnimateDiff_00316.mp4"
       ]
     },
     {
@@ -3372,7 +3336,7 @@
           "hidden": false,
           "paused": false,
           "params": {
-            "filename": "AnimateDiff_00313.mp4",
+            "filename": "AnimateDiff_00316.mp4",
             "subfolder": "",
             "type": "output",
             "format": "video/h264-mp4"
@@ -3846,7 +3810,7 @@
         "1": 58
       },
       "flags": {},
-      "order": 93,
+      "order": 94,
       "mode": 0,
       "inputs": [
         {
@@ -5549,40 +5513,6 @@
       "widgets_values": {}
     },
     {
-      "id": 178,
-      "type": "INTConstant",
-      "pos": [
-        -1021,
-        78
-      ],
-      "size": [
-        210,
-        58
-      ],
-      "flags": {},
-      "order": 59,
-      "mode": 0,
-      "outputs": [
-        {
-          "name": "value",
-          "type": "INT",
-          "links": [
-            212
-          ],
-          "shape": 3,
-          "slot_index": 0
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "INTConstant"
-      },
-      "widgets_values": [
-        8
-      ],
-      "color": "#1b4669",
-      "bgcolor": "#29699c"
-    },
-    {
       "id": 127,
       "type": "StringConstant",
       "pos": [
@@ -5594,7 +5524,7 @@
         "1": 61.08148193359375
       },
       "flags": {},
-      "order": 60,
+      "order": 59,
       "mode": 0,
       "outputs": [
         {
@@ -5612,6 +5542,76 @@
       },
       "widgets_values": [
         "dragtest_21.txt"
+      ]
+    },
+    {
+      "id": 178,
+      "type": "INTConstant",
+      "pos": [
+        -1021,
+        78
+      ],
+      "size": [
+        210,
+        58
+      ],
+      "flags": {},
+      "order": 60,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "value",
+          "type": "INT",
+          "links": [
+            212
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "INTConstant"
+      },
+      "widgets_values": [
+        16
+      ],
+      "color": "#1b4669",
+      "bgcolor": "#29699c"
+    },
+    {
+      "id": 84,
+      "type": "SetNode",
+      "pos": [
+        -685,
+        -24
+      ],
+      "size": {
+        "0": 210,
+        "1": 58
+      },
+      "flags": {},
+      "order": 70,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "link": 96
+        }
+      ],
+      "outputs": [
+        {
+          "name": "*",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "title": "Set_VAE",
+      "properties": {
+        "previousName": "VAE"
+      },
+      "widgets_values": [
+        "VAE"
       ]
     }
   ],
